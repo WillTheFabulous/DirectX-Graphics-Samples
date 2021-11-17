@@ -200,8 +200,8 @@ void D3D12RaytracingProceduralGeometry::InitializeScene()
         // Analytic primitives.
         {
             using namespace AnalyticPrimitive;
-            SetAttributes(offset + AABB, red);
-            SetAttributes(offset + Spheres, ChromiumReflectance, 1);
+            SetAttributes(offset + AABB, ChromiumReflectance,1, 0.9f, 0.7f, 50.0f, 1.0f, 1.0f);
+            SetAttributes(offset + Spheres, ChromiumReflectance, 1, 0.9f, 0.7f, 50.0f, 1.0f, 1.0f);
             offset += AnalyticPrimitive::Count;
         }
 
@@ -218,9 +218,9 @@ void D3D12RaytracingProceduralGeometry::InitializeScene()
             SetAttributes(offset + MiniSpheres, green);
             SetAttributes(offset + IntersectedRoundCube, green);
             SetAttributes(offset + SquareTorus, ChromiumReflectance, 1);
-            SetAttributes(offset + TwistedTorus, yellow, 0, 1.0f, 0.7f, 50, 0.5f, 3.0f );
+            SetAttributes(offset + TwistedTorus, yellow, 0, 1.0f, 0.7f, 50, 0.5f );
             SetAttributes(offset + Cog, yellow, 0, 1.0f, 0.1f, 2);
-            SetAttributes(offset + Cylinder, red);
+            SetAttributes(offset + Cylinder,red);
             SetAttributes(offset + FractalPyramid, green, 0, 1, 0.1f, 4, 0.8f);
         }
     }

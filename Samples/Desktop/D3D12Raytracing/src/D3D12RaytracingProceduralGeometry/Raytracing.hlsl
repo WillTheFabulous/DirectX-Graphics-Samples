@@ -249,9 +249,9 @@ void MyClosestHitShader_AABB(inout RayPayload rayPayload, in ProceduralPrimitive
 
     if (l_materialCB.refractCoef > 0.001) {
         float rayDotNormal = dot(WorldRayDirection(), attr.normal);
-        float temp = 1.2;
+        float temp = 1.5;
         if (rayDotNormal > 0.0) {
-            realNormal = -1.0 * attr.normal;
+            realNormal = -attr.normal;
             niOvernt = temp;
         }
         else {
@@ -260,15 +260,17 @@ void MyClosestHitShader_AABB(inout RayPayload rayPayload, in ProceduralPrimitive
         }
 
 
-        float cosine = dot(WorldRayDirection(), realNormal);
+        float cosine = dot(-WorldRayDirection(), realNormal);
         float discriminant = 1.0 - niOvernt * niOvernt * (1.0 - cosine * cosine);
 
         if (discriminant > 0) {
-            Ray refractionRay = { HitWorldPosition() , refract(WorldRayDirection(), realNormal, niOvernt) };
+
+            float3 newDir = normalize(refract(WorldRayDirection(), realNormal, niOvernt));
+            Ray refractionRay = { HitWorldPosition() + 0.01 * newDir , newDir };
             float4 refractionColor = TraceRadianceRay(refractionRay, rayPayload.recursionDepth);
             refractedColor = float4(1.0, 1.0, 1.0, 1.0) * refractionColor;
-            color = refractedColor;
-            //color = float4(1,1,1,1);
+            color = refractionColor;
+            //color = float4(newDir.x,0,0,1);
         }
         else {
             Ray reflectionRay = { HitWorldPosition(), reflect(WorldRayDirection(), attr.normal) };
@@ -279,7 +281,7 @@ void MyClosestHitShader_AABB(inout RayPayload rayPayload, in ProceduralPrimitive
 
             // Calculate final color.
             float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, attr.normal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
-            color = phongColor + reflectedColor;
+            color = reflectedColor;
         }
 
     }
