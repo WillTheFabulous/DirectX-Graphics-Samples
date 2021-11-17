@@ -86,11 +86,12 @@ struct PrimitiveConstantBuffer
     float reflectanceCoef;
     float diffuseCoef;
     float specularCoef;
+    float refractCoef;
     float specularPower;
     float stepScale;                      // Step scale for ray marching of signed distance primitives. 
                                           // - Some object transformations don't preserve the distances and 
                                           //   thus require shorter steps.
-    XMFLOAT3 padding;
+    XMFLOAT2 padding;
 };
 
 // Attributes per primitive instance.

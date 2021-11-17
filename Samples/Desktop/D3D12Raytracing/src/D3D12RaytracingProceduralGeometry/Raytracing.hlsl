@@ -240,9 +240,50 @@ void MyClosestHitShader_AABB(inout RayPayload rayPayload, in ProceduralPrimitive
     Ray shadowRay = { hitPosition, normalize(g_sceneCB.lightPosition.xyz - hitPosition) };
     bool shadowRayHit = TraceShadowRayAndReportIfHit(shadowRay, rayPayload.recursionDepth);
 
-    // Reflected component.
+    // Reflected and refracted component.
+    float4 color = float4(0, 0, 0, 0);
     float4 reflectedColor = float4(0, 0, 0, 0);
-    if (l_materialCB.reflectanceCoef > 0.001)
+    float4 refractedColor = float4(0, 0, 0, 0);
+    float niOvernt;
+    float3 realNormal;
+
+    if (l_materialCB.refractCoef > 0.001) {
+        float rayDotNormal = dot(WorldRayDirection(), attr.normal);
+        float temp = 1.2;
+        if (rayDotNormal > 0.0) {
+            realNormal = -1.0 * attr.normal;
+            niOvernt = temp;
+        }
+        else {
+            realNormal = attr.normal;
+            niOvernt = 1.0 / temp;
+        }
+
+
+        float cosine = dot(WorldRayDirection(), realNormal);
+        float discriminant = 1.0 - niOvernt * niOvernt * (1.0 - cosine * cosine);
+
+        if (discriminant > 0) {
+            Ray refractionRay = { HitWorldPosition() , refract(WorldRayDirection(), realNormal, niOvernt) };
+            float4 refractionColor = TraceRadianceRay(refractionRay, rayPayload.recursionDepth);
+            refractedColor = float4(1.0, 1.0, 1.0, 1.0) * refractionColor;
+            color = refractedColor;
+            //color = float4(1,1,1,1);
+        }
+        else {
+            Ray reflectionRay = { HitWorldPosition(), reflect(WorldRayDirection(), attr.normal) };
+            float4 reflectionColor = TraceRadianceRay(reflectionRay, rayPayload.recursionDepth);
+
+            float3 fresnelR = FresnelReflectanceSchlick(WorldRayDirection(), attr.normal, l_materialCB.albedo.xyz);
+            reflectedColor = l_materialCB.reflectanceCoef * float4(fresnelR, 1) * reflectionColor;
+
+            // Calculate final color.
+            float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, attr.normal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
+            color = phongColor + reflectedColor;
+        }
+
+    }
+    else if (l_materialCB.reflectanceCoef > 0.001)
     {
         // Trace a reflection ray.
         Ray reflectionRay = { HitWorldPosition(), reflect(WorldRayDirection(), attr.normal) };
@@ -250,11 +291,18 @@ void MyClosestHitShader_AABB(inout RayPayload rayPayload, in ProceduralPrimitive
 
         float3 fresnelR = FresnelReflectanceSchlick(WorldRayDirection(), attr.normal, l_materialCB.albedo.xyz);
         reflectedColor = l_materialCB.reflectanceCoef * float4(fresnelR, 1) * reflectionColor;
+
     }
 
-    // Calculate final color.
-    float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, attr.normal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
-    float4 color = phongColor + reflectedColor;
+
+    if (l_materialCB.refractCoef > 0.001) {
+        // do nothing
+    }
+    else {
+        // Calculate final color.
+        float4 phongColor = CalculatePhongLighting(l_materialCB.albedo, attr.normal, shadowRayHit, l_materialCB.diffuseCoef, l_materialCB.specularCoef, l_materialCB.specularPower);
+        color = phongColor + reflectedColor;
+    }
 
     // Apply visibility falloff.
     float t = RayTCurrent();

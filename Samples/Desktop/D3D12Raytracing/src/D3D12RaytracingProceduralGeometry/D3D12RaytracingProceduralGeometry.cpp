@@ -175,7 +175,8 @@ void D3D12RaytracingProceduralGeometry::InitializeScene()
             float diffuseCoef = 0.9f,
             float specularCoef = 0.7f,
             float specularPower = 50.0f,
-            float stepScale = 1.0f )
+            float stepScale = 1.0f,
+            float refractCoef = 0.0f)
         {
             auto& attributes = m_aabbMaterialCB[primitiveIndex];
             attributes.albedo = albedo;
@@ -184,10 +185,11 @@ void D3D12RaytracingProceduralGeometry::InitializeScene()
             attributes.specularCoef = specularCoef;
             attributes.specularPower = specularPower;
             attributes.stepScale = stepScale;
+            attributes.refractCoef = refractCoef;
         };
 
 
-        m_planeMaterialCB = { XMFLOAT4(0.9f, 0.9f, 0.9f, 1.0f), 0.25f, 1, 0.4f, 50, 1};
+        m_planeMaterialCB = { XMFLOAT4(0.9f, 0.9f, 0.9f, 1.0f), 0.25f, 1, 0.4f, 50, 1, 0.0f};
 
         // Albedos
         XMFLOAT4 green = XMFLOAT4(0.1f, 1.0f, 0.5f, 1.0f);
@@ -216,7 +218,7 @@ void D3D12RaytracingProceduralGeometry::InitializeScene()
             SetAttributes(offset + MiniSpheres, green);
             SetAttributes(offset + IntersectedRoundCube, green);
             SetAttributes(offset + SquareTorus, ChromiumReflectance, 1);
-            SetAttributes(offset + TwistedTorus, yellow, 0, 1.0f, 0.7f, 50, 0.5f );
+            SetAttributes(offset + TwistedTorus, yellow, 0, 1.0f, 0.7f, 50, 0.5f, 3.0f );
             SetAttributes(offset + Cog, yellow, 0, 1.0f, 0.1f, 2);
             SetAttributes(offset + Cylinder, red);
             SetAttributes(offset + FractalPyramid, green, 0, 1, 0.1f, 4, 0.8f);
